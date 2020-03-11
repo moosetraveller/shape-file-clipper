@@ -1,2 +1,2 @@
-# data-prep
-GIS Data Preparation
+# GIS Data Preparation
+Clip and Project Data
