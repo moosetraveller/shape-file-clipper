@@ -19,7 +19,7 @@ TEST_OUTPUT_PATH = r"/Users/thozub/_projects/data-prep/output"
 
 
 def init_logging():
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s  %(levelname)s %(message)s')
+    logging.basicConfig(level=logging.ERROR, format='%(asctime)s  %(levelname)s %(message)s')
 
 
 def check_geometries(data_frame):
