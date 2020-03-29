@@ -25,10 +25,12 @@ def fix_polygons(data_frame):
     return data_frame
 
 
-def is_polygon_feature_set(data_frame):
+def is_polygon_feature_set(data_frame, include_multipolygons=True):
     """ Returns true if the given data frame contains polygons or multi-polygons. """
 
-    return isinstance(data_frame.loc[0, "geometry"], Polygon) or isinstance(data_frame.loc[0, "geometry"], MultiPolygon)
+    if include_multipolygons and isinstance(data_frame.loc[0, "geometry"], MultiPolygon):
+        return True
+    return isinstance(data_frame.loc[0, "geometry"], Polygon)
 
 
 def project_data_frame(data_frame, epsg_code):
