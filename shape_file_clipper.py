@@ -6,11 +6,8 @@ import time
 import geopandas as gpd
 from pyproj import CRS
 import earthpy.clip as ec
-from osgeo import ogr
 
 import logging
-
-ogr.UseExceptions()
 
 TEST_CLIP_EXTENT = r"/Volumes/W0425931/_data/geonova/20200115/Digby/BrierIsland.shp"
 TEST_SHAPE_FILE_DIRECTORY = r"/Volumes/W0425931/_cogs/5_Winter_2020/CART4032_Digby/data/geonova/Selected Shapefiles"
@@ -19,10 +16,16 @@ TEST_OUTPUT_PATH = r"/Users/thozub/_projects/data-prep/output"
 
 
 def init_logging():
-    logging.basicConfig(level=logging.ERROR, format='%(asctime)s  %(levelname)s %(message)s')
+    """ Initialize logging. """
+
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s  %(levelname)s %(message)s')
 
 
 def check_geometries(data_frame):
+    """ Checks the geometry of each feature and returns two data frames, one with all valid values and a second
+        one with the invalid features. """
+
+    # enrich data_frame with an is_valid column to avoid a second, redundant validation for both data_frames
     data_frame["is_valid"] = data_frame["geometry"].is_valid
 
     valid_values = data_frame.loc[data_frame["is_valid"]]
@@ -35,37 +38,46 @@ def fix_polygons(data_frame):
     """ Fixes ring self intersected polygons by applying a buffer of 0. Returns the data frame enriched with an
         additional column indicating if geometries are valid or not an a data frame only containing features
         with invalid geometries will be returned as well. """
+
     data_frame["geometry"] = data_frame["geometry"].buffer(0.0)
 
 
 def is_polygon_feature_set(data_frame):
     """ Returns true if the given data frame contains polygons. """
+
     return data_frame.loc[0, "geometry"] == "Polygon"
 
 
 def project_data_frame(data_frame, epsg_code):
+    """ Reproject given data frame using given EPSG code. Returns the reprojected data frame. """
+
     crs = CRS.from_epsg(epsg_code).to_wkt()
     data_frame = data_frame.to_crs(crs)
     return data_frame
 
 
 class ExecutionTimer:
+    """ Timer class to stop execution time. """
 
     def __init__(self):
         self.start_time = None
         self.reset()
 
     def get_running_time(self):
+        """ Returns the running time since creating this timer or since its last reset. """
         return time.time() - self.start_time
 
     def reset(self):
+        """ Resets the timer. """
         self.start_time = time.time()
 
     def log_running_time(self):
+        """ Logs the execution time since creating this timer or since its last reset. """
         logging.info("Execution time: {0:.0f} seconds".format(self.get_running_time()))
 
 
-class ShapeFileClipperLog:
+class ShapeFileClipperLogEntry:
+    """ Log Entry class of ShapeFileClipper. """
 
     def __init__(self, result_message, ignored_values, execution_time):
         self.result_message = result_message
@@ -85,6 +97,7 @@ class ShapeFileClipper:
 
     def __init__(self, clip_shape_file, output_path, output_file_postfix):
         self.clip_extent = gpd.read_file(clip_shape_file)
+        self.projected_clip_extents = {}  # applying flyweight pattern
         self.output_path = output_path
         self.output_file_postfix = output_file_postfix
         self.log = []
@@ -97,7 +110,18 @@ class ShapeFileClipper:
         return os.path.join(self.output_path, new_file_name)
 
     def __clip_data(self, data_frame):
-        clipped_data_frame = ec.clip_shp(data_frame, self.clip_extent)
+
+        clip_extent = self.clip_extent
+
+        if clip_extent.crs != data_frame.crs:
+            key = str(data_frame.crs)
+            if key in self.projected_clip_extents:
+                clip_extent = self.projected_clip_extents[key]
+            else:
+                clip_extent = clip_extent.to_crs(data_frame.crs)
+                self.projected_clip_extents[key] = clip_extent
+
+        clipped_data_frame = ec.clip_shp(data_frame, clip_extent)
         clipped_data_frame.crs = data_frame.crs
         return clipped_data_frame[~clipped_data_frame.is_empty]
 
@@ -115,12 +139,11 @@ class ShapeFileClipper:
         # check geometries and enrich with column is_valid
         valid_values, non_valid_values = check_geometries(data_frame)
 
-        if not any(valid_values.intersects(self.clip_extent.unary_union)):
-            return None, non_valid_values, "{} does not overlap with clipping extent. Ignored.".format(shape_file_name)
+        clipped_data_frame = None
+        if any(valid_values.intersects(self.clip_extent.unary_union)):
+            clipped_data_frame = self.__clip_data(valid_values)
 
-        clipped_data_frame = self.__clip_data(valid_values)
-
-        if len(clipped_data_frame) == 0:
+        if clipped_data_frame is None or len(clipped_data_frame) == 0:
             return None, non_valid_values, "No features of {} within clipping extent.".format(shape_file_name)
 
         return clipped_data_frame, non_valid_values, "{} successfully clipped.".format(shape_file_name)
@@ -136,7 +159,7 @@ class ShapeFileClipper:
 
         clipped_data_frame, ignored_values, result_message = self.__clip(shape_file)
 
-        self.log.append(ShapeFileClipperLog(result_message, ignored_values, timer.get_running_time()))
+        self.log.append(ShapeFileClipperLogEntry(result_message, ignored_values, timer.get_running_time()))
         timer.reset()
 
         if clipped_data_frame is not None:
@@ -144,7 +167,7 @@ class ShapeFileClipper:
             output_file_path = self.__save_shape_file(clipped_data_frame, shape_file)
 
             result_message = "{} saved.".format(output_file_path)
-            self.log.append(ShapeFileClipperLog(result_message, None, timer.get_running_time()))
+            self.log.append(ShapeFileClipperLogEntry(result_message, None, timer.get_running_time()))
 
     def clip_and_project(self, shape_file, epsg_code):
 
@@ -152,7 +175,7 @@ class ShapeFileClipper:
 
         clipped_data_frame, ignored_values, result_message = self.__clip(shape_file)
 
-        self.log.append(ShapeFileClipperLog(result_message, ignored_values, timer.get_running_time()))
+        self.log.append(ShapeFileClipperLogEntry(result_message, ignored_values, timer.get_running_time()))
         timer.reset()
 
         if clipped_data_frame is not None:
@@ -161,7 +184,7 @@ class ShapeFileClipper:
             output_file_path = self.__save_shape_file(clipped_data_frame, shape_file)
 
             result_message = "{} projected and saved.".format(output_file_path)
-            self.log.append(ShapeFileClipperLog(result_message, None, timer.get_running_time()))
+            self.log.append(ShapeFileClipperLogEntry(result_message, None, timer.get_running_time()))
 
     def print_log(self):
         for log_entry in self.log:
