@@ -9,7 +9,7 @@ EW = tk.E + tk.W
 
 NSW = tk.N + tk.S + tk.W
 NSE = tk.N + tk.S + tk.E
-NEW = tk.N + tk.W + tk.W
+NEW = tk.N + tk.E + tk.W
 SEW = tk.S + tk.E + tk.W
 
 NSEW = tk.N + tk.S + tk.E + tk.W
