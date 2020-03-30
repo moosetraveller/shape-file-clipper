@@ -29,7 +29,7 @@ class ShapeFileClipperApp(tk.Tk):
         self.title("Shape File Clipper")
         self.geometry("+100+100")
 
-        self.indicator = Indicator(self, height=380, width=950)
+        self.indicator = Indicator(self, height=400, width=950)
         self.main_frame = ShapeFileClipperAppFrame(self)
 
         self.button_bar = ttk.Frame(self)
@@ -48,6 +48,9 @@ class ShapeFileClipperApp(tk.Tk):
             command=self.close
         )
         self.close_button.pack(side=tk.RIGHT)
+
+        self.progress_bar = ttk.Progressbar(self.buttons, orient=tk.HORIZONTAL, length=100, mode="determinate")
+        self.progress_bar.pack(side=tk.LEFT, padx=50)
 
         self.buttons.pack(side=tk.RIGHT, padx=10, pady=10)
 
@@ -70,9 +73,11 @@ class ShapeFileClipperApp(tk.Tk):
         threading.Thread(target=self.__execute).start()
 
     def __show_indicator(self):
+        self.progress_bar.step(0)
         self.indicator.tkraise()
 
     def __hide_indicator(self):
+        self.progress_bar.stop()
         self.main_frame.tkraise()
 
     def __execute(self):
@@ -86,11 +91,12 @@ class ShapeFileClipperApp(tk.Tk):
         shape_files = self.main_frame.shape_file_selector.get()
         epsg_code = self.main_frame.projection_selector.get()
 
-        for shape_file in shape_files:
+        for index, shape_file in enumerate(shape_files):
             if not epsg_code or len(epsg_code.strip()) == 0:
                 clipper.clip(shape_file)
             else:
                 clipper.clip_and_project(shape_file, epsg_code)
+            self.progress_bar.step(100/len(shape_files))
 
         self.__hide_indicator()
         self.execute_button["state"] = tk.NORMAL
@@ -114,7 +120,7 @@ class ShapeFileClipperAppFrame(ttk.Frame):
 
         self.columnconfigure(0, weight=1)
 
-        self.input_frame = ttk.Frame(self, relief=tk.RAISED, borderwidth=1)
+        self.input_frame = ttk.Frame(self, relief=tk.FLAT, borderwidth=1)
         self.input_frame.columnconfigure(0, weight=1)
 
         self.shape_file_selector = ShapeFileSelector(self.input_frame)
@@ -442,6 +448,8 @@ def start():
 
     # set dpi awareness for windows high resolution screens
     windows.set_dpi_awareness()
+
+    sfc.init_logging()
 
     root = ShapeFileClipperApp()
     root.mainloop()

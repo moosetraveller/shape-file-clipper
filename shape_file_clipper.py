@@ -92,6 +92,7 @@ class ShapeFileClipper:
                 clip_extent = clip_extent.to_crs(data_frame.crs)
                 self.projected_clip_extents[key] = clip_extent
 
+        # requires earthpy version 0.8.0 !
         clipped_data_frame = ec.clip_shp(data_frame, clip_extent)
         clipped_data_frame.crs = data_frame.crs
         return clipped_data_frame[~clipped_data_frame.is_empty]
