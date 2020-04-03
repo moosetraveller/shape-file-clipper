@@ -6,15 +6,15 @@ from abc import ABC, abstractmethod
 import tkinter as tk
 from tkinter import ttk, filedialog
 
-import windows
-
 import tk_util as tku
 import shape_file_clipper as sfc
 
 
 class Validator(ABC):
+
     @abstractmethod
     def validate(self):
+        """ Returns a message (not valid) or None (valid). """
         pass
 
 
@@ -49,7 +49,12 @@ class ShapeFileClipperApp(tk.Tk):
         )
         self.close_button.pack(side=tk.RIGHT)
 
-        self.progress_bar = ttk.Progressbar(self.buttons, orient=tk.HORIZONTAL, length=100, mode="determinate")
+        self.progress_bar = ttk.Progressbar(
+            self.buttons,
+            orient=tk.HORIZONTAL,
+            length=100,
+            mode="determinate"
+        )
         self.progress_bar.pack(side=tk.LEFT, padx=50)
 
         self.buttons.pack(side=tk.RIGHT, padx=10, pady=10)
@@ -61,6 +66,8 @@ class ShapeFileClipperApp(tk.Tk):
         self.resizable(False, False)
 
     def execute(self):
+        """ Validates input and starts the clip and project process
+            in separate thread. """
 
         messages = self.main_frame.validate()
         if len(messages) > 0:
@@ -73,14 +80,19 @@ class ShapeFileClipperApp(tk.Tk):
         threading.Thread(target=self.__execute).start()
 
     def __show_indicator(self):
+        """ Private method to show indicator. """
+
         self.progress_bar.step(0)
         self.indicator.tkraise()
 
     def __hide_indicator(self):
+        """ Private method to hide indicator. """
+
         self.progress_bar.stop()
         self.main_frame.tkraise()
 
     def __execute(self):
+        """ Private method. Effective implementation of execute(). """
 
         clip_extent = self.main_frame.clip_extent_selector.get()
         output_path = self.main_frame.output_path_selector.get()
@@ -106,6 +118,7 @@ class ShapeFileClipperApp(tk.Tk):
 
 
 class Indicator(ttk.Frame):
+    """ Indicator Panel (currently empty, later it should show a console) """
 
     def __init__(self, container, **kwargs):
         super().__init__(container, **kwargs)
@@ -447,7 +460,7 @@ class OutputFileNamePostfixSelector(ttk.Frame, Validator):
 def start():
 
     # set dpi awareness for windows high resolution screens
-    windows.set_dpi_awareness()
+    tku.set_dpi_awareness()
 
     sfc.init_logging()
 

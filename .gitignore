@@ -1,3 +1,6 @@
 data/
 output/
 webserver.sh
+.DS_Store
+__pycache__/
+.idea/

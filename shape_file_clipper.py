@@ -21,7 +21,7 @@ TEST_OUTPUT_PATH = r"/Users/thozub/_projects/data-prep/output"
 def init_logging():
     """ Initialize logging. """
 
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s  %(levelname)s %(message)s')
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s  %(levelname)s %(message)s")
 
 
 class ExecutionTimer:
@@ -81,6 +81,7 @@ class ShapeFileClipper:
         return os.path.join(self.output_path, new_file_name)
 
     def __clip_data(self, data_frame):
+        """ Clips given data frame. """
 
         clip_extent = self.clip_extent
 

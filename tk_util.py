@@ -1,5 +1,14 @@
 import tkinter as tk
 
+
+def set_dpi_awareness():
+    try:
+        from ctypes import windll
+        windll.shcore.SetProcessDpiAwareness(1)
+    except:
+        pass
+
+
 NS = tk.N + tk.S
 NW = tk.N + tk.W
 NE = tk.N + tk.E

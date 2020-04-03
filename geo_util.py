@@ -4,10 +4,11 @@ from shapely.geometry.multipolygon import MultiPolygon
 
 
 def check_geometries(data_frame):
-    """ Checks the geometry of each feature and returns two data frames, one with all valid values and a second
-        one with the invalid features. """
+    """ Checks the geometry of each feature and returns two data frames, one with all valid values
+        and a secondone with the invalid features. """
 
-    # enrich data_frame with an is_valid column to avoid a second, redundant validation for both data_frames
+    # enrich data_frame with an is_valid column to avoid a second, redundant validation
+    # for both data_frames
     data_frame["is_valid"] = data_frame["geometry"].is_valid
 
     valid_values = data_frame.loc[data_frame["is_valid"]]
@@ -17,9 +18,9 @@ def check_geometries(data_frame):
 
 
 def fix_polygons(data_frame):
-    """ Fixes ring self intersected polygons by applying a buffer of 0. Returns the data frame enriched with an
-        additional column indicating if geometries are valid or not an a data frame only containing features
-        with invalid geometries will be returned as well. """
+    """ Fixes ring self intersected polygons by applying a buffer of 0. Returns the data frame
+        enriched with an additional column indicating if geometries are valid or not an a data
+        frame only containing features with invalid geometries will be returned as well. """
 
     data_frame["geometry"] = data_frame["geometry"].buffer(0.0)
     return data_frame
