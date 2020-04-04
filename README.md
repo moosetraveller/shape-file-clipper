@@ -9,3 +9,9 @@ conda install gdal
 conda install geopandas
 conda install -c conda-forge earthpy=0.8.0
 ```
+
+# Use Shape File Clipper
+```shell script
+python shape_file_clipper_app.py
+```
+

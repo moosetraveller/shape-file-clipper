@@ -2,6 +2,8 @@ import tkinter as tk
 
 
 def set_dpi_awareness():
+    """ Enables DPI Awareness on Windows. Ignores any errors. """
+
     try:
         from ctypes import windll
         windll.shcore.SetProcessDpiAwareness(1)

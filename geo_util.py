@@ -5,7 +5,7 @@ from shapely.geometry.multipolygon import MultiPolygon
 
 def check_geometries(data_frame):
     """ Checks the geometry of each feature and returns two data frames, one with all valid values
-        and a secondone with the invalid features. """
+        and a second one with the invalid features. """
 
     # enrich data_frame with an is_valid column to avoid a second, redundant validation
     # for both data_frames
@@ -35,7 +35,8 @@ def is_polygon_feature_set(data_frame, include_multipolygons=True):
 
 
 def project_data_frame(data_frame, epsg_code):
-    """ Reproject given data frame using given EPSG code. Returns the reprojected data frame. """
+    """ Re-project given data frame using given EPSG code. Returns the
+        reprojected data frame. """
 
     crs = CRS.from_epsg(epsg_code).to_wkt()
     data_frame = data_frame.to_crs(crs)

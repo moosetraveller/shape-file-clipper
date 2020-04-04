@@ -11,14 +11,17 @@ import shape_file_clipper as sfc
 
 
 class Validator(ABC):
+    """ Abstract class. """
 
     @abstractmethod
     def validate(self):
-        """ Returns a message (not valid) or None (valid). """
+        """ Returns message(s) (=not valid) or None (=valid). """
         pass
 
 
 class ShapeFileClipperApp(tk.Tk):
+    """ Main app class. Coordinator between GUI widgets/components and
+        Shape File Clipper script. """
 
     def __init__(self):
         super().__init__()
@@ -62,7 +65,7 @@ class ShapeFileClipperApp(tk.Tk):
         self.indicator.grid(row=0, column=0, sticky=tku.NEW)
         self.main_frame.grid(row=0, column=0, sticky=tku.NEW)
         self.button_bar.grid(row=1, column=0, sticky=tku.EW)
-        
+
         self.resizable(False, False)
 
     def execute(self):
@@ -71,6 +74,7 @@ class ShapeFileClipperApp(tk.Tk):
 
         messages = self.main_frame.validate()
         if len(messages) > 0:
+            print(messages)
             return
 
         self.__show_indicator()
@@ -108,12 +112,13 @@ class ShapeFileClipperApp(tk.Tk):
                 clipper.clip(shape_file)
             else:
                 clipper.clip_and_project(shape_file, epsg_code)
-            self.progress_bar.step(100/len(shape_files))
+            self.progress_bar.step(100 / len(shape_files))
 
         self.__hide_indicator()
         self.execute_button["state"] = tk.NORMAL
 
     def close(self):
+        """ Close application. """
         self.quit()
 
 
@@ -124,7 +129,9 @@ class Indicator(ttk.Frame):
         super().__init__(container, **kwargs)
 
 
-class ShapeFileClipperAppFrame(ttk.Frame):
+class ShapeFileClipperAppFrame(ttk.Frame, Validator):
+    """ Frame containing all input components. Provides a validate() method
+        which iterates over all validate() methods of input components. """
 
     def __init__(self, root, **kwargs):
         super().__init__(root, **kwargs)
@@ -162,13 +169,14 @@ class ShapeFileClipperAppFrame(ttk.Frame):
     def validate(self):
         messages = []
         for input_frame in self.input_frames:
-            message = input_frame.validate()
-            if message is not None:
-                messages.append(message)
+            input_frame_message = input_frame.validate()
+            if input_frame_message is not None:
+                messages = messages + input_frame_message
         return messages
 
 
 class ShapeFileSelector(ttk.Frame, Validator):
+    """ Input component to select shape files. """
 
     def __init__(self, container, **kwargs):
         super().__init__(container, **kwargs)
@@ -269,10 +277,11 @@ class ShapeFileSelector(ttk.Frame, Validator):
             return None
         message = "No shape file selected."
         self.validation_label_value.set(message)
-        return message
+        return [message]
 
 
 class ClipExtentSelector(ttk.Frame, Validator):
+    """ Input component to select a shape file defining the clip extent. """
 
     def __init__(self, container, **kwargs):
         super().__init__(container, **kwargs)
@@ -330,10 +339,11 @@ class ClipExtentSelector(ttk.Frame, Validator):
             message = "Clip extent does not exist."
 
         self.validation_label_value.set(message if message is not None else "")
-        return message
+        return [message] if message is not None else None
 
 
 class OutputPathSelector(ttk.Frame, Validator):
+    """ Input component to select an output folder. """
 
     def __init__(self, container, **kwargs):
         super().__init__(container, **kwargs)
@@ -388,10 +398,11 @@ class OutputPathSelector(ttk.Frame, Validator):
             message = "Output directory does not exist."
 
         self.validation_label_value.set(message if message is not None else "")
-        return message
+        return [message] if message is not None else None
 
 
 class ProjectionSelector(ttk.Frame, Validator):
+    """ Input component to set an EPSG code. """
 
     def __init__(self, container, **kwargs):
         super().__init__(container, **kwargs)
@@ -430,6 +441,7 @@ class ProjectionSelector(ttk.Frame, Validator):
 
 
 class OutputFileNamePostfixSelector(ttk.Frame, Validator):
+    """ Input component to select the postfix to be added to the output file. """
 
     def __init__(self, container, **kwargs):
         super().__init__(container, **kwargs)
@@ -458,7 +470,6 @@ class OutputFileNamePostfixSelector(ttk.Frame, Validator):
 
 
 def start():
-
     # set dpi awareness for windows high resolution screens
     tku.set_dpi_awareness()
 
