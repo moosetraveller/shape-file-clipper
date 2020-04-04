@@ -2,7 +2,7 @@
 A simple tool to clip shape files and project them.
 
 ----
-**This tool *never* went beyond an experimential prototype. Use at your own risk.**
+**This tool *never* went beyond an experimential prototype.**
 ----
 
 
