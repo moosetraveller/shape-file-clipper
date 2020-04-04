@@ -1,6 +1,9 @@
 data/
 output/
+test/
+.idea/
+__pycache__/
 webserver.sh
 .DS_Store
-__pycache__/
-.idea/
+unzip.py
+playground.py
