@@ -1,5 +1,7 @@
-# GIS Data Preparation
-Clip and Project Data
+# Shape File Clipper
+A simple tool to clip shape files and project them.
+
+**This tool never went beyond an experimential prototype. Use on your own risk.**
 
 # Set Up Python Environment
 ```shell script
