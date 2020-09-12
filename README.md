@@ -2,6 +2,7 @@
 A simple tool to clip shape files and project them.
 
 ----
+
 **Shape File Clipper for Python is an experimential prototype.**
 That said, UX experience with Tkinter **is** horrendous!  
 
